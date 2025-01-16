@@ -1,13 +1,10 @@
 package main
 
 import (
+	"autoMessages/internal/chat"
 	"autoMessages/internal/config"
-	"context"
 	"log"
 	"sync"
-	"time"
-
-	"github.com/chromedp/chromedp"
 )
 
 func run(numbers map[string]int) {
@@ -15,23 +12,9 @@ func run(numbers map[string]int) {
 	var wg sync.WaitGroup
 	wg.Add(len(numbers))
 
-	for number, isWarm := range len(numbers) {
+	for number, isWarm := range numbers {
 		go func() {
-			opts := []chromedp.ExecAllocatorOption{
-				chromedp.Flag("headless", false),
-			}
-			allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
-			defer cancel()
-
-			ctx, cancel := chromedp.NewContext(allocCtx)
-			defer cancel()
-			err := chromedp.Run(ctx,
-				chromedp.Navigate("https://web.whatsapp.com/"),
-			)
-			if err != nil {
-				log.Fatal("Error opening WhatsApp Web:", err)
-			}
-			time.Sleep(30 * time.Second)
+			chat.Chatting(number, numbers, 10, isWarm)
 			wg.Done()
 		}()
 	}
@@ -47,5 +30,8 @@ func initNumbers() map[string]int {
 }
 
 func main() {
+	numbers := initNumbers()
+	log.Println(numbers)
+	run(numbers)
 
 }

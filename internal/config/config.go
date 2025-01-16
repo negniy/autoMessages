@@ -9,6 +9,11 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+func normalizeNumber(number string) string {
+	re := regexp.MustCompile(`^(?:\+7|7|8)`)
+	return re.ReplaceAllString(number, "")
+}
+
 func LoadNumbers() map[string]int {
 	f, err := excelize.OpenFile("numbers.xlsx")
 	if err != nil {
@@ -59,6 +64,8 @@ func LoadNumbers() map[string]int {
 		} else {
 			flag = 1
 		}
+
+		number = normalizeNumber(number)
 		numbers[number] = flag
 		index++
 	}
