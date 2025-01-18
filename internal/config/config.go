@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 	"strconv"
@@ -12,6 +13,20 @@ import (
 func normalizeNumber(number string) string {
 	re := regexp.MustCompile(`^(?:\+7|7|8)`)
 	return re.ReplaceAllString(number, "")
+}
+
+func formatPhoneNumber(input string) string {
+	if len(input) != 10 {
+		log.Printf("invalid phone number length")
+		return ""
+	}
+
+	return fmt.Sprintf("%s %s-%s-%s",
+		input[:3],  // Первая группа (999)
+		input[3:6], // Вторая группа (123)
+		input[6:8], // Третья группа (45)
+		input[8:],  // Четвёртая группа (67)
+	)
 }
 
 func LoadNumbers() map[string]int {
@@ -66,6 +81,7 @@ func LoadNumbers() map[string]int {
 		}
 
 		number = normalizeNumber(number)
+		number = formatPhoneNumber(number)
 		numbers[number] = flag
 		index++
 	}

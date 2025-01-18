@@ -11,15 +11,18 @@ func run(numbers map[string]int) {
 
 	var wg sync.WaitGroup
 	wg.Add(len(numbers))
+	ch := make(chan interface{}, 1)
+	ch <- struct{}{}
 
 	for number, isWarm := range numbers {
 		go func() {
-			chat.Chatting(number, numbers, 10, isWarm)
+			chat.Chatting(ch, number, numbers, 5, isWarm)
 			wg.Done()
 		}()
 	}
 
 	wg.Wait()
+	close(ch)
 	log.Println("Номера прогреты")
 
 }
