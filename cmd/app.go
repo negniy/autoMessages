@@ -34,7 +34,7 @@ func initNumbers() map[string]int {
 
 func main() {
 	numbers := initNumbers()
-	log.Println(numbers)
+	//log.Println(numbers)
 	run(numbers)
 
 }

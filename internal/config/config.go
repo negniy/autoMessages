@@ -30,7 +30,7 @@ func formatPhoneNumber(input string) string {
 }
 
 func LoadNumbers() map[string]int {
-	f, err := excelize.OpenFile("numbers.xlsx")
+	f, err := excelize.OpenFile("../numbers.xlsx")
 	if err != nil {
 		log.Fatal(err)
 		return nil
