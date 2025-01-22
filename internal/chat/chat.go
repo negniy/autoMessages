@@ -57,16 +57,12 @@ func randomChoices(options []string, n int) []string {
 	return results
 }
 
-func randVoice() string {
-	return randomChoice(voices)
-}
-
 func randPic() string {
-	return randomChoice(pics)
+	return randomChoice(Pics)
 }
 
 func addPic(ctx context.Context) {
-	pathToPic := randPic()
+	pathToPic := "..\\pics\\" + randPic()
 
 	err := chromedp.Run(ctx,
 		chromedp.Click("span[data-icon='plus']", chromedp.BySearch),
@@ -151,7 +147,7 @@ func sendMessage(ctx context.Context, numberTo string, message string) {
 		return
 	}
 
-	if rand.Float64() < 0.3 {
+	if rand.Float64() < 0.3 && len(Pics) != 0 {
 		addPic(ctx)
 	}
 
@@ -228,7 +224,7 @@ func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int
 		}
 	}
 
-	maxSec := 1 * 1 * 60 / n
+	maxSec := 1 * 10 * 60 / n
 	var wg sync.WaitGroup
 	wg.Add(len(numbersTo))
 	var mutex sync.Mutex
