@@ -1,7 +1,6 @@
 package config
 
 import (
-	"autoMessages/internal/chat"
 	"fmt"
 	"log"
 	"os"
@@ -12,22 +11,26 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-func LoadPics() {
-	files, err := os.ReadDir("..\\pics")
+func LoadPics(folderPath string) ([]string, error) {
+	files, err := os.ReadDir(folderPath)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	reg, err := regexp.Compile(`.*\.jpg$`)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
+	pics := make([]string, 0, 10)
 	for _, file := range files {
 		if !file.IsDir() {
 			if reg.MatchString(file.Name()) {
-				chat.Pics = append(chat.Pics, file.Name())
+				pics = append(pics, file.Name())
 			}
 		}
 	}
+	return pics, nil
 }
 
 func normalizeNumber(number string) string {

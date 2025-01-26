@@ -57,12 +57,12 @@ func randomChoices(options []string, n int) []string {
 	return results
 }
 
-func randPic() string {
-	return randomChoice(Pics)
+func randPic(listOfPics []string) string {
+	return randomChoice(listOfPics)
 }
 
-func addPic(ctx context.Context) {
-	pathToPic := "..\\pics\\" + randPic()
+func addPic(ctx context.Context, listOfPics []string) {
+	pathToPic := "..\\pics\\" + randPic(listOfPics)
 
 	err := chromedp.Run(ctx,
 		chromedp.Click("span[data-icon='plus']", chromedp.BySearch),
@@ -96,7 +96,7 @@ func sendVoice(ctx context.Context) {
 	}
 }
 
-func sendMessage(ctx context.Context, numberTo string, message string) {
+func sendMessage(ctx context.Context, numberTo string, message string, listOfPics []string) {
 
 	err := chromedp.Run(ctx,
 		chromedp.Sleep(2*time.Second),
@@ -147,8 +147,8 @@ func sendMessage(ctx context.Context, numberTo string, message string) {
 		return
 	}
 
-	if rand.Float64() < 0.3 && len(Pics) != 0 {
-		addPic(ctx)
+	if rand.Float64() < 0.3 && len(listOfPics) != 0 {
+		addPic(ctx, listOfPics)
 	}
 
 	err = chromedp.Run(ctx,
@@ -172,7 +172,7 @@ func sendMessage(ctx context.Context, numberTo string, message string) {
 	//log.Printf("Сообщение отправлено номеру %s\n", numberTo, time.Now().Format("15:04:05"))
 }
 
-func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int, duration time.Duration, n int, isWarm int) {
+func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int, duration time.Duration, n int, listOfPics []string, isWarm int) {
 
 	<-syncch
 
@@ -243,7 +243,7 @@ func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int
 					message = randMessage()
 				}
 				mutex.Lock()
-				sendMessage(ctx, number, message)
+				sendMessage(ctx, number, message, listOfPics)
 				mutex.Unlock()
 
 				time.Sleep(time.Duration(wait+1) * time.Second)

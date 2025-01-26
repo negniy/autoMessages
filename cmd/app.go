@@ -17,7 +17,7 @@ import (
 	"fyne.io/fyne/widget"
 )
 
-func run(numbers map[string]int, duration time.Duration, n int) {
+func run(numbers map[string]int, duration time.Duration, n int, listOfPics []string) {
 
 	var wg sync.WaitGroup
 	wg.Add(len(numbers))
@@ -36,14 +36,14 @@ func run(numbers map[string]int, duration time.Duration, n int) {
 
 	for _, number := range warm {
 		go func() {
-			chat.Chatting(ch, number, numbers, duration, n, 1)
+			chat.Chatting(ch, number, numbers, duration, n, listOfPics, 1)
 			wg.Done()
 		}()
 	}
 
 	for _, number := range cold {
 		go func() {
-			chat.Chatting(ch, number, numbers, duration, n, 0)
+			chat.Chatting(ch, number, numbers, duration, n, listOfPics, 0)
 			wg.Done()
 		}()
 	}
@@ -90,6 +90,7 @@ func main() {
 	numberOfMessages := 0
 	var err error
 	var time time.Duration = 0
+	var pics []string
 
 	logWriter := &logger.CustomWriter{}
 	log.SetOutput(logWriter)
@@ -101,9 +102,6 @@ func main() {
 	logOutput.SetPlaceHolder("Здесь будут отображаться логи...")
 	logOutput.Disable()
 	logWriter.SetLogWidget(logOutput)
-
-	config.LoadPics()
-	log.Println("List of ", chat.Pics)
 
 	messageCountButton := widget.NewButton("Выбор количества сообщений", func() {
 		options := []string{"10", "20", "30", "40", "50", "60", "70", "80", "90", "100"}
@@ -156,19 +154,42 @@ func main() {
 		}, myWindow).Show()
 	})
 
+	photoFolderButton := widget.NewButton("Выбор папки с фото", func() {
+		dialog.NewFolderOpen(func(folder fyne.ListableURI, err error) {
+			if err != nil {
+				log.Println(fmt.Sprintf("Ошибка: %v", err))
+				return
+			}
+			if folder == nil {
+				log.Println("Папка не выбрана")
+				return
+			}
+			folderPath := folder.String()[7:]
+			log.Println(folderPath)
+			pics, err = config.LoadPics(folderPath)
+			if err != nil {
+				log.Println(fmt.Sprintf("Ошибка: %v", err))
+				return
+			}
+			log.Println(fmt.Sprintf("Выбрана папка: %s", folderPath))
+			log.Println(pics)
+		}, myWindow).Show()
+	})
+
 	startButton := widget.NewButton("Запустить прогрев", func() {
 		log.Println("Запуск прогрева...")
-		if len(numbers) == 0 || time == 0 || numberOfMessages == 0 {
+		if len(numbers) == 0 || time == 0 || numberOfMessages == 0 || len(pics) == 0 {
 			log.Println("При подготовке возникла ошибка")
 			return
 		}
-		run(numbers, time, numberOfMessages)
+		run(numbers, time, numberOfMessages, pics)
 	})
 
 	content := container.NewVBox(
 		messageCountButton,
 		timeSelectionButton,
 		excelButton,
+		photoFolderButton,
 		startButton,
 		logOutput,
 	)
