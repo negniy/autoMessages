@@ -17,33 +17,25 @@ import (
 	"fyne.io/fyne/widget"
 )
 
-func run(numbers map[string]int, duration time.Duration, n int, listOfPics []string) {
+func run(warm []string, cold []string, duration time.Duration, n int, listOfPics []string) {
 
 	var wg sync.WaitGroup
-	wg.Add(len(numbers))
+	wg.Add(len(warm) + len(cold))
 	ch := make(chan interface{}, 1)
 	ch <- struct{}{}
 
-	warm := make([]string, 0, len(numbers))
-	cold := make([]string, 0, len(numbers))
-	for k, v := range numbers {
-		if v == 1 {
-			warm = append(warm, k)
-		} else {
-			cold = append(cold, k)
-		}
-	}
-
 	for _, number := range warm {
 		go func() {
-			chat.Chatting(ch, number, numbers, duration, n, listOfPics, 1)
+			chat.Chatting(ch, number, cold, duration, n, listOfPics)
 			wg.Done()
 		}()
 	}
 
+	numbers := append(cold, warm...)
+
 	for _, number := range cold {
 		go func() {
-			chat.Chatting(ch, number, numbers, duration, n, listOfPics, 0)
+			chat.Chatting(ch, number, numbers, duration, n, listOfPics)
 			wg.Done()
 		}()
 	}
@@ -54,21 +46,20 @@ func run(numbers map[string]int, duration time.Duration, n int, listOfPics []str
 
 }
 
-func initNumbers(filename string) (map[string]int, error) {
+func initWarmNumbers(filename string) ([]string, error) {
+	numbers, err := config.LoadNumbers(filename)
+	return numbers, err
+}
+
+func initColdNumbers(filename string) ([]string, error) {
 	numbers, err := config.LoadNumbers(filename)
 	return numbers, err
 }
 
 func parseDuration(input string) (time.Duration, error) {
 	switch input {
-	case "5 мин":
-		return 5 * time.Minute, nil
-	case "10 мин":
-		return 10 * time.Minute, nil
-	case "30 мин":
-		return 30 * time.Minute, nil
-	case "1 час":
-		return 1 * time.Hour, nil
+	case "1.5 часа":
+		return 1*time.Hour + 30*time.Minute, nil
 	case "2 часа":
 		return 2 * time.Hour, nil
 	case "3 часа":
@@ -86,7 +77,8 @@ func parseDuration(input string) (time.Duration, error) {
 
 func main() {
 
-	var numbers map[string]int
+	var warm []string
+	var cold []string
 	numberOfMessages := 0
 	var err error
 	var time time.Duration = 0
@@ -108,10 +100,10 @@ func main() {
 		dialog.ShowCustom("Выберите количество сообщений", "OK", container.NewVBox(
 			widget.NewLabel("Количество сообщений:"),
 			widget.NewSelect(options, func(selected string) {
-				log.Println(fmt.Sprintf("Выбрано количество сообщений: %s", selected))
+				log.Printf("Выбрано количество сообщений: %s\n", selected)
 				numberOfMessages, err = strconv.Atoi(selected)
 				if err != nil {
-					log.Println(fmt.Sprintf("Ошибка: %v", err))
+					log.Printf("Ошибка: %v\n", err)
 					return
 				}
 			}),
@@ -119,77 +111,62 @@ func main() {
 	})
 
 	timeSelectionButton := widget.NewButton("Выбор времени работы", func() {
-		options := []string{"5 мин", "10 мин", "30 мин", "1 час", "2 часа", "3 часа", "5 часов", "8 часов", "12 часов"}
+		options := []string{"1.5 часа", "2 часа", "3 часа", "5 часов", "8 часов", "12 часов"}
 		dialog.ShowCustom("Выберите время работы", "OK", container.NewVBox(
 			widget.NewLabel("Время работы:"),
 			widget.NewSelect(options, func(selected string) {
-				log.Println(fmt.Sprintf("Выбрано время работы: %s", selected))
+				log.Printf("Выбрано время работы: %s\n", selected)
 				time, err = parseDuration(selected)
 				if err != nil {
-					log.Println(fmt.Sprintf("Ошибка: %v", err))
+					log.Printf("Ошибка: %v\n", err)
 					return
 				}
 			}),
 		), myWindow)
 	})
 
-	excelButton := widget.NewButton("Открыть Excel с номерами", func() {
-		dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
-			if err != nil {
-				log.Println(fmt.Sprintf("Ошибка: %v", err))
-				return
-			}
-			if reader == nil {
-				log.Println("Файл не выбран")
-				return
-			}
-			fileName := reader.URI().String()[7:]
-			log.Println(fileName)
-			numbers, err = initNumbers(fileName)
-			if err != nil {
-				log.Println(fmt.Sprintf("Ошибка: %v", err))
-				return
-			}
-			log.Println(fmt.Sprintf("Выбран файл: %s", fileName))
-		}, myWindow).Show()
-	})
+	pics, err = config.LoadPics("./pics")
+	if err != nil {
+		log.Printf("Ошибка: %v\n", err)
+		return
+	}
+	log.Println(pics)
 
-	photoFolderButton := widget.NewButton("Выбор папки с фото", func() {
-		dialog.NewFolderOpen(func(folder fyne.ListableURI, err error) {
-			if err != nil {
-				log.Println(fmt.Sprintf("Ошибка: %v", err))
-				return
-			}
-			if folder == nil {
-				log.Println("Папка не выбрана")
-				return
-			}
-			folderPath := folder.String()[7:]
-			log.Println(folderPath)
-			pics, err = config.LoadPics(folderPath)
-			if err != nil {
-				log.Println(fmt.Sprintf("Ошибка: %v", err))
-				return
-			}
-			log.Println(fmt.Sprintf("Выбрана папка: %s", folderPath))
-			log.Println(pics)
-		}, myWindow).Show()
-	})
+	warm, err = config.LoadNumbers(".//dontTouch.xlsx")
+	if err != nil {
+		log.Printf("Ошибка: %v\n", err)
+		return
+	}
+	log.Println("Warm: ", warm)
+
+	cold, err = config.LoadNumbers(".//numbers.xlsx")
+	if err != nil {
+		log.Printf("Ошибка: %v\n", err)
+		return
+	}
+	log.Println("Cold: ", cold)
 
 	startButton := widget.NewButton("Запустить прогрев", func() {
-		log.Println("Запуск прогрева...")
-		if len(numbers) == 0 || time == 0 || numberOfMessages == 0 || len(pics) == 0 {
-			log.Println("При подготовке возникла ошибка")
+		if len(warm) == 0 || len(cold) == 0 {
+			log.Println("При загрузке номеров возникла ошибка")
 			return
+		} else if time == 0 {
+			log.Println("При выборе времени прогрева возникла ошибка")
+			return
+		} else if numberOfMessages == 0 {
+			log.Println("При выборе кол-ва сообщений возникла ошибка")
+			return
+		} else if len(pics) == 0 {
+			log.Println("При загрузке картинок возникла ошибка")
+			return
+		} else {
+			run(warm, cold, time, numberOfMessages, pics)
 		}
-		run(numbers, time, numberOfMessages, pics)
 	})
 
 	content := container.NewVBox(
 		messageCountButton,
 		timeSelectionButton,
-		excelButton,
-		photoFolderButton,
 		startButton,
 		logOutput,
 	)

@@ -172,13 +172,14 @@ func sendMessage(ctx context.Context, numberTo string, message string, listOfPic
 	//log.Printf("Сообщение отправлено номеру %s\n", numberTo, time.Now().Format("15:04:05"))
 }
 
-func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int, duration time.Duration, n int, listOfPics []string, isWarm int) {
+func Chatting(syncch chan interface{}, numberFrom string, numbersTo []string, duration time.Duration, n int, listOfPics []string) {
 
 	<-syncch
 
 	opts := []chromedp.ExecAllocatorOption{
 		chromedp.Flag("headless", false),
 		chromedp.Flag("use-fake-ui-for-media-stream", true),
+		chromedp.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"),
 	}
 
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
@@ -208,22 +209,6 @@ func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int
 
 	syncch <- struct{}{}
 
-	numbersTo := make([]string, 0, len(numbers))
-	if isWarm == 0 {
-		for k := range numbers {
-			if strings.Compare(k, numberFrom) != 0 {
-				numbersTo = append(numbersTo, k)
-			}
-		}
-
-	} else {
-		for k, v := range numbers {
-			if strings.Compare(k, numberFrom) != 0 && v != 1 {
-				numbersTo = append(numbersTo, k)
-			}
-		}
-	}
-
 	maxSec := int(duration.Seconds()) / n
 	var wg sync.WaitGroup
 	wg.Add(len(numbersTo))
@@ -232,8 +217,11 @@ func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int
 	//log.Println(numbersTo)
 
 	for _, number := range numbersTo {
-		go func() {
-			for i := range n {
+		if strings.Compare(number, numberFrom) == 0 {
+			continue
+		}
+		go func(num int) {
+			for i := range num {
 				wait := rand.Intn(maxSec)
 				if i == 0 {
 					message = randHello()
@@ -246,10 +234,10 @@ func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int
 				sendMessage(ctx, number, message, listOfPics)
 				mutex.Unlock()
 
-				time.Sleep(time.Duration(wait+1) * time.Second)
+				time.Sleep(time.Duration(wait+45) * time.Second)
 			}
 			wg.Done()
-		}()
+		}(n)
 	}
 	wg.Wait()
 

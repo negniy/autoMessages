@@ -52,14 +52,14 @@ func formatPhoneNumber(input string) string {
 	)
 }
 
-func LoadNumbers(filename string) (map[string]int, error) {
+func LoadNumbers(filename string) ([]string, error) {
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 
-	numbers := make(map[string]int)
+	numbers := make([]string, 0, 10)
 	index := 1
 	re, err := regexp.Compile(`^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$`)
 	if err != nil {
@@ -86,26 +86,9 @@ func LoadNumbers(filename string) (map[string]int, error) {
 			continue
 		}
 
-		val, err := f.GetCellValue("Лист1", "B"+strconv.Itoa(index))
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		flag, err := strconv.Atoi(val)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-
-		if flag < 1 {
-			flag = 0
-		} else {
-			flag = 1
-		}
-
 		number = normalizeNumber(number)
 		number = formatPhoneNumber(number)
-		numbers[number] = flag
+		numbers = append(numbers, number)
 		index++
 	}
 }
