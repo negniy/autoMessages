@@ -49,19 +49,19 @@ func formatPhoneNumber(input string) string {
 	)
 }
 
-func LoadNumbers() map[string]int {
-	f, err := excelize.OpenFile("../numbers.xlsx")
+func LoadNumbers(filename string) (map[string]int, error) {
+	f, err := excelize.OpenFile(filename)
 	if err != nil {
-		log.Fatal(err)
-		return nil
+		log.Println(err)
+		return nil, err
 	}
 
 	numbers := make(map[string]int)
 	index := 1
 	re, err := regexp.Compile(`^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$`)
 	if err != nil {
-		log.Fatal(err)
-		return nil
+		log.Println(err)
+		return nil, err
 	}
 
 	for {
@@ -77,7 +77,7 @@ func LoadNumbers() map[string]int {
 			if strings.Compare(number, "") == 0 {
 				if index != 1 {
 					log.Println("reading is over at " + "A" + strconv.Itoa(index))
-					return numbers
+					return numbers, nil
 				}
 			}
 			continue

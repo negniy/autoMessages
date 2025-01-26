@@ -169,10 +169,10 @@ func sendMessage(ctx context.Context, numberTo string, message string) {
 		return
 	}
 
-	//log.Printf("Сообщение отправлено номеру %s в %s\n", numberTo, time.Now().Format("15:04:05"))
+	//log.Printf("Сообщение отправлено номеру %s\n", numberTo, time.Now().Format("15:04:05"))
 }
 
-func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int, n int, isWarm int) {
+func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int, duration time.Duration, n int, isWarm int) {
 
 	<-syncch
 
@@ -224,7 +224,7 @@ func Chatting(syncch chan interface{}, numberFrom string, numbers map[string]int
 		}
 	}
 
-	maxSec := 1 * 10 * 60 / n
+	maxSec := int(duration.Seconds()) / n
 	var wg sync.WaitGroup
 	wg.Add(len(numbersTo))
 	var mutex sync.Mutex
