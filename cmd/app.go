@@ -92,7 +92,6 @@ func main() {
 	var time time.Duration = 0
 
 	logWriter := &logger.CustomWriter{}
-	logWriter.AddOutput(log.Writer())
 	log.SetOutput(logWriter)
 
 	myApp := app.New()
