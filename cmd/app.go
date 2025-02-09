@@ -4,8 +4,10 @@ import (
 	"autoMessages/internal/chat"
 	"autoMessages/internal/config"
 	"autoMessages/internal/logger"
+	"context"
 	"fmt"
 	"log"
+	"os/exec"
 	"strconv"
 	"sync"
 	"time"
@@ -17,43 +19,43 @@ import (
 	"fyne.io/fyne/widget"
 )
 
-func run(warm []string, cold []string, duration time.Duration, n int, listOfPics []string) {
+func run(ctx context.Context, warm []string, cold []string, duration time.Duration, n int, listOfPics []string) {
 
 	var wg sync.WaitGroup
-	wg.Add(len(warm) + len(cold))
-	ch := make(chan interface{}, 1)
-	ch <- struct{}{}
+	ch := make(chan int, 1)
+	ch <- 0
 
 	for _, number := range warm {
-		go func() {
-			chat.Chatting(ch, number, cold, duration, n, listOfPics)
-			wg.Done()
-		}()
+		wg.Add(1)
+		go func(num string) {
+			defer wg.Done()
+			chat.Chatting(ctx, ch, num, cold, duration, n, listOfPics)
+
+		}(number)
 	}
 
-	numbers := append(cold, warm...)
+	for {
+		v := <-ch
+		if v == len(warm) {
+			ch <- 0
+			break
+		} else {
+			ch <- v
+		}
+	}
 
 	for _, number := range cold {
-		go func() {
-			chat.Chatting(ch, number, numbers, duration, n, listOfPics)
-			wg.Done()
-		}()
+		wg.Add(1)
+		go func(num string) {
+			defer wg.Done()
+			chat.Chatting(ctx, ch, num, append(cold, warm...), duration, n, listOfPics)
+		}(number)
 	}
 
 	wg.Wait()
 	close(ch)
-	log.Println("Номера прогреты")
+	log.Println("Прогрев завершен")
 
-}
-
-func initWarmNumbers(filename string) ([]string, error) {
-	numbers, err := config.LoadNumbers(filename)
-	return numbers, err
-}
-
-func initColdNumbers(filename string) ([]string, error) {
-	numbers, err := config.LoadNumbers(filename)
-	return numbers, err
 }
 
 func parseDuration(input string) (time.Duration, error) {
@@ -75,6 +77,11 @@ func parseDuration(input string) (time.Duration, error) {
 	}
 }
 
+func openFile(filePath string) error {
+	cmd := exec.Command("cmd", "/c", "start", filePath)
+	return cmd.Run()
+}
+
 func main() {
 
 	var warm []string
@@ -83,6 +90,8 @@ func main() {
 	var err error
 	var time time.Duration = 0
 	var pics []string
+	ctx, cancel := context.WithCancel(context.Background())
+	cancelFunc := cancel
 
 	logWriter := &logger.CustomWriter{}
 	log.SetOutput(logWriter)
@@ -94,6 +103,9 @@ func main() {
 	logOutput.SetPlaceHolder("Здесь будут отображаться логи...")
 	logOutput.Disable()
 	logWriter.SetLogWidget(logOutput)
+	logContainer := container.NewVBox(logOutput)
+	scrollContainer := container.NewScroll(logContainer)
+	scrollContainer.SetMinSize(fyne.NewSize(1000, 300))
 
 	messageCountButton := widget.NewButton("Выбор количества сообщений", func() {
 		options := []string{"10", "20", "30", "40", "50", "60", "70", "80", "90", "100"}
@@ -125,7 +137,14 @@ func main() {
 		), myWindow)
 	})
 
-	pics, err = config.LoadPics("./pics")
+	excelButton := widget.NewButton("Выбор номеров для прогрева", func() {
+		err := openFile(".//numbers.xlsx")
+		if err != nil {
+			log.Println("Ошибка открытия файла:", err)
+		}
+	})
+
+	pics, err = config.LoadPics(".//pics")
 	if err != nil {
 		log.Printf("Ошибка: %v\n", err)
 		return
@@ -139,14 +158,15 @@ func main() {
 	}
 	log.Println("Warm: ", warm)
 
-	cold, err = config.LoadNumbers(".//numbers.xlsx")
-	if err != nil {
-		log.Printf("Ошибка: %v\n", err)
-		return
-	}
-	log.Println("Cold: ", cold)
-
 	startButton := widget.NewButton("Запустить прогрев", func() {
+
+		cold, err = config.LoadNumbers(".//numbers.xlsx")
+		if err != nil {
+			log.Printf("Ошибка: %v\n", err)
+			return
+		}
+		log.Println("Cold: ", cold)
+
 		if len(warm) == 0 || len(cold) == 0 {
 			log.Println("При загрузке номеров возникла ошибка")
 			return
@@ -160,15 +180,23 @@ func main() {
 			log.Println("При загрузке картинок возникла ошибка")
 			return
 		} else {
-			run(warm, cold, time, numberOfMessages, pics)
+			go run(ctx, warm, cold, time, numberOfMessages, pics)
 		}
+	})
+
+	endButton := widget.NewButton("Остановить прогрев", func() {
+		cancelFunc()
+		log.Println("Прогрев остановлен")
+		ctx, cancelFunc = context.WithCancel(context.Background())
 	})
 
 	content := container.NewVBox(
 		messageCountButton,
 		timeSelectionButton,
+		excelButton,
 		startButton,
-		logOutput,
+		endButton,
+		scrollContainer,
 	)
 
 	myWindow.SetContent(content)

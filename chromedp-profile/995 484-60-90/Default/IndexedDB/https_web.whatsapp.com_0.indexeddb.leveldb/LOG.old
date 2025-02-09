@@ -1,0 +1,15 @@
+2025/02/09-18:50:04.237 485c Reusing MANIFEST C:\Users\dstep\OneDrive\Рабочий стол\Go\autoMessages\chromedp-profile\995 484-60-90\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/02/09-18:50:04.238 485c Recovering log #194
+2025/02/09-18:50:04.254 485c Reusing old log C:\Users\dstep\OneDrive\Рабочий стол\Go\autoMessages\chromedp-profile\995 484-60-90\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000194.log 
+2025/02/09-18:50:12.157 54f0 Level-0 table #200: started
+2025/02/09-18:50:12.168 54f0 Level-0 table #200: 393057 bytes OK
+2025/02/09-18:50:12.170 54f0 Delete type=0 #194
+2025/02/09-18:50:12.171 484 Manual compaction at level-0 from '\x009\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00:\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/02/09-18:50:15.068 54f0 Compacting 1@1 + 2@2 files
+2025/02/09-18:50:15.131 54f0 Generated table #201@1: 55970 keys, 2286295 bytes
+2025/02/09-18:50:15.157 54f0 Generated table #202@1: 14186 keys, 841219 bytes
+2025/02/09-18:50:15.157 54f0 Compacted 1@1 + 2@2 files => 3127514 bytes
+2025/02/09-18:50:15.158 54f0 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/02/09-18:50:15.159 54f0 Delete type=2 #196
+2025/02/09-18:50:15.159 54f0 Delete type=2 #197
+2025/02/09-18:50:15.159 54f0 Delete type=2 #200

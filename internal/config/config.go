@@ -11,6 +11,8 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+func CreateFolder() {}
+
 func LoadPics(folderPath string) ([]string, error) {
 	files, err := os.ReadDir(folderPath)
 	if err != nil {
