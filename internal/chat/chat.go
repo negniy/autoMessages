@@ -13,7 +13,7 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-var minWait = 3
+var minWait = 40
 
 func randHello() string {
 	return randomChoice(hi)
@@ -283,7 +283,6 @@ func Chatting(parentCtx context.Context, syncch chan int, numberFrom string, num
 	syncch <- (val + 1)
 
 	maxSec := int(duration.Seconds()) / n
-	maxSec = 3
 	var wg sync.WaitGroup
 	wg.Add(len(numbersTo))
 	var mutex sync.Mutex
