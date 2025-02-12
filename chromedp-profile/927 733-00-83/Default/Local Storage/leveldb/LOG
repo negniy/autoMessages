@@ -1,6 +1,0 @@
-2025/02/09-19:06:31.375 5340 Reusing MANIFEST C:\Users\dstep\OneDrive\Рабочий стол\Go\autoMessages\chromedp-profile\927 733-00-83\Default\Local Storage\leveldb/MANIFEST-000001
-2025/02/09-19:06:31.387 5340 Recovering log #22
-2025/02/09-19:06:31.395 5340 Reusing old log C:\Users\dstep\OneDrive\Рабочий стол\Go\autoMessages\chromedp-profile\927 733-00-83\Default\Local Storage\leveldb/000022.log 
-2025/02/09-19:09:32.705 4cec Level-0 table #26: started
-2025/02/09-19:09:32.711 4cec Level-0 table #26: 16183 bytes OK
-2025/02/09-19:09:32.713 4cec Delete type=0 #22
