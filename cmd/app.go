@@ -9,6 +9,7 @@ import (
 	"log"
 	"os/exec"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -44,11 +45,12 @@ func run(ctx context.Context, warm []string, cold []string, duration time.Durati
 		}
 	}
 
+	all := append(cold, warm...)
 	for _, number := range cold {
 		wg.Add(1)
 		go func(num string) {
 			defer wg.Done()
-			chat.Chatting(ctx, ch, num, append(cold, warm...), duration, n, listOfPics)
+			chat.Chatting(ctx, ch, num, all, duration, n, listOfPics)
 		}(number)
 	}
 
@@ -80,6 +82,17 @@ func parseDuration(input string) (time.Duration, error) {
 func openFile(filePath string) error {
 	cmd := exec.Command("cmd", "/c", "start", filePath)
 	return cmd.Run()
+}
+
+func checkNums(arr1 []string, arr2 []string) error {
+	for _, val1 := range arr1 {
+		for _, val2 := range arr2 {
+			if strings.Compare(val1, val2) == 0 {
+				return fmt.Errorf("номер одновременно в двух списках: %s", val1)
+			}
+		}
+	}
+	return nil
 }
 
 func main() {
@@ -166,6 +179,12 @@ func main() {
 			return
 		}
 		log.Println("Cold: ", cold)
+
+		err = checkNums(cold, warm)
+		if err != nil {
+			log.Printf("Ошибка: %v\n", err)
+			return
+		}
 
 		if len(warm) == 0 || len(cold) == 0 {
 			log.Println("При загрузке номеров возникла ошибка")
